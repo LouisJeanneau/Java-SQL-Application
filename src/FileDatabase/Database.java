@@ -36,7 +36,7 @@ public class Database {
     }
 
 
-    public void addRecord(String[] record) throws IOException {
+    public void addRecord(String[] record) throws IOException, IllegalArgumentException {
         // Length verification
         if (record.length != numberOfColumns){
             throw new IllegalArgumentException("Wrong number of columns entered");
@@ -46,7 +46,11 @@ public class Database {
         }
     }
 
-    public void deleteRecord(String[] record) throws IOException, CsvValidationException {
+    public void deleteRecord(String[] record) throws IOException, CsvValidationException, IllegalArgumentException {
+        // chekc argument
+        if (record.length != numberOfColumns){
+            throw new IllegalArgumentException("Wrong length of record");
+        }
         List<String[]> records = new ArrayList<>();
         try (CSVReader reader = new CSVReader(new BufferedReader(new FileReader(fileName)))) {
             String[] nextRecord;
@@ -72,6 +76,26 @@ public class Database {
             }
         }
         return records;
+    }
+
+
+    public boolean updateRecord(String[] oldRecord, String[] newRecord) throws IOException, CsvValidationException {
+        List<String[]> records = new ArrayList<>();
+        try (CSVReader reader = new CSVReader(new BufferedReader(new FileReader(fileName)))) {
+            String[] nextRecord;
+            while ((nextRecord = reader.readNext()) != null) {
+                if (recordMatch(nextRecord, oldRecord)) {
+                    records.add(newRecord);
+                }
+                else {
+                    records.add(nextRecord);
+                }
+            }
+        }
+        try (CSVWriter writer = new CSVWriter(new FileWriter(fileName))) {
+            writer.writeAll(records);
+        }
+        return true;
     }
 
     private boolean recordMatch(String[] record1, String[] record2) {
