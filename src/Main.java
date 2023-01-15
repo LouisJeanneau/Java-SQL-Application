@@ -1,44 +1,88 @@
-import FileDatabase.Database;
+import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
-        try {
-            // db CREATE
-            Database db = new Database("Students", new String[]{"Name", "Surname", "Age"});
-            // db INSERT
-            db.addRecord(new String[]{"John", "Smith", "45"});
-            db.addRecord(new String[]{"Pablo", "Picasso", "104"});
-            db.addRecord(new String[]{"Pablo", "Dali", "104"});
-            // db SELECT *
-            printQueryResult(db.SelectByColumnNumber(new int[]{}));
-            // db DELETE
-            db.deleteRecord(new String[]{"Pablo", "Dali", "104"});
-            // db SELECT
-            printQueryResult(db.SelectByColumnNumber(new int[]{1,2,0,1}));
-            // db UPDATE
-            db.addRecord(new String[]{"Pablo", "Dali", "104"});
-            db.updateRecord(new String[]{"Pablo", "Dali", "104"}, new String[]{"Jean", "Michel", "22"});
-            printQueryResult(db.SelectByColumnNumber(new int[]{}));
+    static Scanner scanner = new Scanner(System.in);
 
+    public static void main(String[] args) throws IOException {
+        // Welcome message
+        System.out.println("Welcome to SimpleDB ! A simple file-based database application developed in Java.");
 
-        }
-        catch(Exception e) {
-            System.out.println(e);
+        // Valid key inputs selection and user selection menu #1
+        char[] correctKeys = {100, 68, 32};
+        char pressedKey = 0;
+        String line = "";
+        while (!ArrayUtils.contains(correctKeys, pressedKey)) {
+            System.out.println("""
+                    Type an option (and then 'Enter' key) :
+                    \t Spacebar : start command-line interface
+                    \t D : Demo mode
+                    """);
+            line = scanner.nextLine();
+            if (!Objects.equals(line, "")) {
+                pressedKey = line.charAt(0);
+            }
         }
 
-        File f = new File("Students");
-        f.delete();
+        // Execute user choice
+        switch (pressedKey){
+            // Demo
+            case 100:
+            case 68:
+                try {
+                    demoQueries();
+                }catch (Exception e){
+                    System.out.println("Something went wrong in the demo ! :(");
+                    System.out.printf(e.toString());
+                }
+                break;
+            case 32:
+                try {
+                    cli();
+                }catch (Exception e){
+                    System.out.printf(e.toString());
+                }
+                break;
+        }
     }
 
-    private static void printQueryResult(List<String[]> res) {
-        System.out.println("== Table Print ==");
-        for (String[] array : res) {
-            System.out.println(Arrays.toString(array));
+    private static void demoQueries() throws Exception {
+        System.out.println("Launching the demo !\n");
+        SimpleDB db = new SimpleDB("");
+        db.executeSQL("CREATE TABLE stud (name, surname, age)");
+        db.executeSQL("CREATE TABLE teacher (name, surname, age)");
+        db.executeSQL("INSERT INTO stud VALUES (Pierre, Papin, 58)");
+        db.executeSQL("INSERT INTO teacher VALUES (Yo, wtf, 50)");
+        db.executeSQL("SELECT * FROM stud");
+        db.executeSQL("UPDATE stud SET name = 'Jean', surname = 'Michel' WHERE name = 'Pierre'");
+        db.executeSQL("SELECT * FROM teacher");
+    }
+
+    private static void cli() throws Exception {
+        // TODO : cli loop
+        System.out.println("Command-line Interface mode. Type 'exit' to exit.");
+
+        SimpleDB db = new SimpleDB("");
+
+        String enteredLine;
+        while (true){
+            switch (enteredLine = scanner.nextLine()) {
+                case "" -> System.out.println("Empty query");
+                case "exit" -> {
+                    System.out.println("Exiting...");
+                    return;
+                }
+                default -> db.executeSQL(enteredLine);
+            }
         }
-        System.out.println("");
+    }
+
+    public static boolean userConfirmation(){
+        System.out.println("Type 'y' to confirm. Anything else to cancel.");
+        char pressedKey = scanner.nextLine().charAt(0);
+        return pressedKey == 'y';
     }
 }

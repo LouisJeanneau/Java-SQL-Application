@@ -2,15 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80734b3c-665d-4baf-b6ce-cea0d2dd79f6" name="Changes" comment="half working version">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/SimpleDB.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/SimpleDBTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Table.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FileDatabase.iml" beforeDir="false" afterPath="$PROJECT_DIR$/FileDatabase.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FileDatabase/FileDatabase/Database.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FileDatabase/FileDatabase/Database.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FileDatabase/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FileDatabase/Main.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/FileDatabase/Database.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileDatabase/Database.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SimpleDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleDB.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SimpleDBTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleDBTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,10 +46,12 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
+    "last.edited.regexp": "UPDATE non SET nom='jean' WHERE oui='oui'",
     "last_opened_file_path": "C:/Users/Louis/Google Drive/01_UTC/GI05_Erasmus/Java/FileDatabase/src",
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "com.intellij.jarRepository.settings.RemoteRepositoriesConfigurable"
   },
   "keyToStringList": {
@@ -66,7 +65,7 @@
       <recent name="C:\Users\Louis\Google Drive\01_UTC\GI05_Erasmus\Java\FileDatabase\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ChatGPT">
+  <component name="RunManager" selected="Application.Main">
     <configuration name="ChatGPT" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="SimpleDB" />
       <module name="FileDatabase" />
@@ -108,9 +107,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.SimpleDBTest.testUpdate" />
         <item itemvalue="JUnit.SimpleDBTest" />
-        <item itemvalue="Application.Main" />
       </list>
     </recent_temporary>
   </component>
@@ -124,8 +123,18 @@
       <updated>1673201470169</updated>
       <workItem from="1673201471732" duration="6411000" />
       <workItem from="1673285611712" duration="3577000" />
-      <workItem from="1673290933698" duration="11919000" />
+      <workItem from="1673290933698" duration="20585000" />
+      <workItem from="1673615964758" duration="10475000" />
+      <workItem from="1673802903229" duration="6358000" />
     </task>
+    <task id="LOCAL-00001" summary="half working version">
+      <created>1673303266272</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1673303266272</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -155,16 +164,21 @@
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/SimpleDB.java</url>
-          <line>17</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/SimpleDBTest.java</url>
           <line>43</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Main.java</url>
+          <line>83</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="java.util.regex.Matcher" memberName="localsPos" />
+      </pinned-members>
+    </pin-to-top-manager>
   </component>
 </project>

@@ -1,296 +1,272 @@
-import java.io.*;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-
+import java.util.concurrent.CancellationException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SimpleDB {
-    private final File dbFile;
+    private static final String CREATE_TABLE_REGEX = "CREATE TABLE (\\w+) \\(([\\w, ]+)\\)";
+    private static final String INSERT_REGEX = "INSERT INTO (\\w+) VALUES \\(([\\w ,']+)\\)";
+    private static final String UPDATE_REGEX = "UPDATE (\\w+) SET (((\\w+) ?= ?'([\\w ]+)' *,* *)+).*";
+    private static final String DELETE_REGEX = "DELETE FROM (\\w+)(.*)";
+    private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)";
+    private static final String WHERE_REGEX = "WHERE (((\\w+) = '(\\w+)' *(AND)* *)+)";
+
     Map<String, Table> tables;
-    String regexCleaner = "[\\[\\],() \"']";
 
-    public static void main(String[] args) {
-        try {
-            SimpleDB db = new SimpleDB("Students");
-            db.executeSQL("CREATE TABLE stud (name, surname, age)");
-            db.executeSQL("CREATE TABLE teacher (name, surname, age)");
-            db.executeSQL("INSERT INTO stud VALUES (Pierre, Papin, 58)");
-            db.executeSQL("INSERT INTO teacher VALUES (Yo, wtf, 50)");
-            db.executeSQL("SELECT * FROM stud");
-            db.executeSQL("UPDATE stud SET name = Jean, surname = Michel WHERE name = Pierre");
-            db.executeSQL("SELECT * FROM teacher");
-        }catch (Exception e){
-            System.out.println(e);
-        }
-
+    public SimpleDB(String folderName) throws Exception {
+        tables = new HashMap<>();
+        // Load existing tables from file
+        loadFromFile(folderName);
     }
 
-    public SimpleDB(String fileName) throws IOException {
-        dbFile = new File(fileName);
-        tables = new HashMap<>();
+    /**
+     * @param sql
+     */
+    public void executeSQL(String sql) {
+        System.out.println("You typed : " + sql);
+        try {
+            // Create table
+            if (sql.matches(CREATE_TABLE_REGEX)) {
+                handleCreate(sql);
+            }
+            // Insert row
+            else if (sql.matches(INSERT_REGEX)) {
+                handleInsert(sql);
+            }
+            // Update row
+            else if (sql.matches(UPDATE_REGEX)) {
+                handleUpdate(sql);
+            }
+            // Delete row
+            else if (sql.matches(DELETE_REGEX)) {
+                handleDelete(sql);
+            }
+            // Select rows
+            else if (sql.matches(SELECT_REGEX)) {
+                handleSelect(sql);
+            } else {
+                System.out.println("Statement not recognized");
+            }
+        } catch (CancellationException e) {
+            System.out.println(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Your prompt is invalid : " + e.getMessage());
+        } catch (NullPointerException e){
+            System.out.println("This table does not exist");
+        }
+    }
 
-        if (dbFile.exists()) {
-            // Load existing database
-            try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
-                String line;
-                Table currentTable = null;
-                while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("CREATE TABLE")) {
-                        // This line creates a new table
-                        String[] parts = line.split(" ");
-                        String tableName = parts[2];
-                        currentTable = new Table(tableName, getColumnParts(parts, 3));
-                        tables.put(tableName, currentTable);
-                    }
-                    else if (line.startsWith("INSERT INTO")) {
-                        // This line inserts a new row into the current table
-                        String[] parts = line.split(" ");
-                        String tableName = parts[2];
-                        currentTable = tables.get(tableName);
-                        if (currentTable == null) {
-                            throw new IOException("Invalid database file: table " + tableName + " does not exist");
-                        }
-                        String[] values = getColumnParts(parts, 4);
-                        currentTable.addRow(values);
-                    }
+    /**
+     * Table creation, with overwrite check and confirmation
+     * @param sql valid CREATE sql query
+     */
+    private void handleCreate(String sql) {
+        // Parse table name and column names from SQL
+        Matcher m = Pattern.compile(CREATE_TABLE_REGEX).matcher(sql);
+        m.find();
+        String tableName = m.group(1);
+        String[] columnNames = m.group(2).split(",");
+
+        // Trim leading/trailing whitespace from column names
+        columnNames = Arrays.stream(columnNames).map(String::trim).toArray(String[]::new);
+
+        // Override check and validation by user
+        if (tables.containsKey(tableName)) {
+            System.out.println("This table already exists. This command will overwrite the existing table. Do you agree ?");
+            if (!Main.userConfirmation()) {
+                throw new CancellationException("Creation of table canceled by user");
+            }
+        }
+
+        // Create new table
+        Table table = new Table(columnNames);
+        tables.put(tableName, table);
+
+        // Saving to files
+        onExecutionSaving(tableName);
+    }
+
+
+    /**
+     * Insert into a table a UNIQUE line of values
+     *
+     * @param sql valid INSERT INTO sql query
+     */
+    private void handleInsert(String sql) {
+        // Parse table name and values from SQL
+        Matcher m = Pattern.compile(INSERT_REGEX).matcher(sql);
+        m.find();
+        String tableName = m.group(1);
+        String[] values = m.group(2).split(",");
+
+        // Trim leading/trailing whitespace from values
+        values = Arrays.stream(values).map(String::trim).toArray(String[]::new);
+
+        // Insert row into table
+        tables.get(tableName).insert(values);
+
+        // Saving to files
+        onExecutionSaving(tableName);
+    }
+
+
+    /**
+     * extract the lines according to the query from the table<
+     *
+     * @param sql   sql query with the WHERE
+     * @param table the table to extract lines from
+     * @return
+     */
+    private List<String[]> handleWhere(String sql, Table table) {
+        // Extract conditions in a List of String[]
+        String[] conditionsString = Pattern.compile(WHERE_REGEX).matcher(sql).results().map(ma -> ma.group(1)).findFirst().orElse("").split("AND");
+        List<String[]> conditions = new ArrayList<>();
+        for (String condition : conditionsString) {
+            conditions.add(Arrays.stream(condition.split("=")).map(c -> c.replaceAll("^[ ']+|[ ']+$", "")).toArray(String[]::new));
+        }
+
+        // Extract columns indexes
+        String[] columns = conditions.stream().map(c -> c[0]).toArray(String[]::new);
+        int[] columnsIndex = table.getColumnsIndex(columns);
+
+        // Do the actual filtering
+        List<String[]> filteredRows = new ArrayList<>();
+        for (String[] row : table.getRows()) {
+            boolean isValid = true;
+            for (int i = 0; i < columnsIndex.length; i++) {
+                if (!row[columnsIndex[i]].equals(conditions.get(i)[1])) {
+                    isValid = false;
+                    break;
+                }
+            }
+            if (isValid) {
+                filteredRows.add(row.clone());
+            }
+
+        }
+
+        return filteredRows;
+    }
+
+    private void handleUpdate(String sql) {
+        // Parse table name, column name, value, and WHERE clause from SQL
+        Matcher m = Pattern.compile(UPDATE_REGEX).matcher(sql);
+        m.find();
+        String tableName = m.group(1);
+        String[] updates = m.group(2).split(",");
+        String[] updateColumns = Arrays.stream(updates).map(c -> c.split("=")[0].trim()).toArray(String[]::new);
+        String[] updateValues = Arrays.stream(updates).map(c -> c.split("=")[1].trim().replace("'", "")).toArray(String[]::new);
+
+        // TODO : extract WHERE reading
+        String[] conditions = Pattern.compile(WHERE_REGEX).matcher(sql).results().map(ma -> ma.group(1)).findFirst().orElse("").split("AND");
+        String[] whereColumns = Arrays.stream(conditions).map(c -> c.split("=")[0].trim()).toArray(String[]::new);
+        String[] whereValues = Arrays.stream(conditions).map(c -> c.split("=")[1].trim().replace("'", "")).toArray(String[]::new);
+
+        // Update rows in table
+        tables.get(tableName).update(updateColumns, updateValues, whereColumns, whereValues);
+
+        onExecutionSaving(tableName);
+    }
+
+    private void handleDelete(String sql) {
+        // Parse table name and WHERE clause from SQL
+        Matcher m = Pattern.compile(DELETE_REGEX).matcher(sql);
+        m.find();
+        String tableName = m.group(1);
+        String whereColumn = m.group(2);
+        String whereValue = m.group(3);
+
+        // TODO : multiple WHERE cond
+        // Delete rows from table
+        tables.get(tableName).delete(whereColumn, whereValue);
+
+        onExecutionSaving(tableName);
+    }
+
+    private void handleSelect(String sql) {
+        // Parse table name and WHERE clause from SQL
+        Matcher m = Pattern.compile(SELECT_REGEX).matcher(sql);
+        m.find();
+        String tableName = m.group(2);
+        String columns = m.group(1);
+
+        // TODO : multiple WHERE cond
+        if (sql.contains("WHERE")) {
+            Matcher mbis = Pattern.compile(WHERE_REGEX).matcher(sql);
+            mbis.find();
+            String whereColumn = m.group(2);
+            String whereValue = m.group(3);
+            // Select rows from table
+            Table table = tables.get(tableName);
+            for (String[] row : table.getRows()) {
+                if (evaluateWhere(row, whereColumn, whereValue)) {
+                    System.out.println(Arrays.toString(row));
                 }
             }
         }
-        else {
-            // Create new database file
-            dbFile.createNewFile();
-        }
-    }
 
-    public void executeSQL(String sql) throws IOException {
-        String[] parts = sql.split(" ");
-        String command = parts[0];
-        switch (command) {
-            case "SELECT" -> handleSelect(parts);
-            case "INSERT" -> handleInsert(parts);
-            case "UPDATE" -> handleUpdate(parts);
-            case "DELETE" -> handleDelete(parts);
-            case "CREATE" -> handleCreate(parts);
-            default -> throw new IOException("Invalid SQL command: " + command);
-        }
-    }
 
-    private void handleSelect(String[] parts) {
-        // SELECT * FROM table WHERE condition
-        String tableName = parts[3];
+        // Select rows from table
         Table table = tables.get(tableName);
-        if (table == null) {
-            System.out.println("Table " + tableName + " does not exist");
-            return;
-        }
-        List<String[]> rows = table.getRows();
-        if (Arrays.asList(parts).contains("WHERE")) {
-            int index = Arrays.asList(parts).indexOf("WHERE");
-            // Apply WHERE condition
-            String condition = String.join(" ", getColumnParts(parts, index+1));
-            rows = table.applyWhere(condition);
-        }
-        for (String[] row : rows) {
+        for (String[] row : table.getRows()) {
             System.out.println(Arrays.toString(row));
         }
     }
 
-    private void handleInsert(String[] parts) throws IOException {
-        // INSERT INTO table VALUES (value1, value2, ...)
-        String tableName = parts[2];
-        Table table = tables.get(tableName);
-        if (table == null) {
-            System.out.println("Table " + tableName + " does not exist");
-            return;
-        }
-        String[] values = getColumnParts(parts, 4);
-        table.addRow(values);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile, true))) {
-            writer.write("INSERT INTO " + tableName + " VALUES " + Arrays.toString(getColumnParts(parts, 4)));
-            writer.newLine();
-        }
-    }
-
-    private void handleUpdate(String[] parts) throws IOException {
-        // UPDATE table SET column1 = value1, column2 = value2 WHERE condition
-        String tableName = parts[1];
-        Table table = tables.get(tableName);
-        if (table == null) {
-            System.out.println("Table " + tableName + " does not exist");
-            return;
-        }
-        int setIndex = Arrays.asList(parts).indexOf("SET");
-        int whereIndex = Arrays.asList(parts).indexOf("WHERE");
-        String setParts = String.join(" ", Arrays.copyOfRange(parts, setIndex+1, whereIndex));
-        String[] changes = setParts.split(", ");
-        for (String change:changes) {
-            String[] splitted = change.split("=");
-            String column = splitted[0];
-            String value = splitted[1];
-            String condition = String.join(" ", getColumnParts(parts, whereIndex+1));
-            table.update(column, value, condition);
-        }
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile))) {
-            writer.write(table.toString());
-        }
-    }
-
-    private void handleDelete(String[] parts) throws IOException {
-        // DELETE FROM table WHERE condition
-        String tableName = parts[2];
-        Table table = tables.get(tableName);
-        if (table == null) {
-            System.out.println("Table " + tableName + " does not exist");
-            return;
-        }
-        String condition = String.join("", getColumnParts(parts, 4));
-        table.delete(condition);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile))) {
-            writer.write(table.toString());
-        }
-    }
-
-
-    private void handleCreate(String[] parts) throws IOException {
-        // CREATE TABLE table (column1 type, column2 type, ...)
-        String tableName = parts[2];
-        if (tables.containsKey(tableName)) {
-            System.out.println("Table " + tableName + " already exists");
-            return;
-        }
-        //String[] columnParts = parts[4].split(",");
-        String[] columnParts = getColumnParts(parts, 3);
-        String[] columns = new String[columnParts.length];
-        System.arraycopy(columnParts, 0, columns, 0, columnParts.length);
-        Table table = new Table(tableName, columns);
-        tables.put(tableName, table);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dbFile, true))) {
-            writer.write("CREATE TABLE " + tableName + " " + Arrays.toString(getColumnParts(parts, 3)));
-            writer.newLine();
-        }
-    }
-
-    private String[] getColumnParts(String[] parts, int startIndexInclusive) {
-        return getColumnParts(parts, startIndexInclusive, -1);
-    }
-
-    private String[] getColumnParts(String[] parts, int startIndexInclusive, int stopIndexExclusive) {
-        if (stopIndexExclusive == -1) {
-            stopIndexExclusive = parts.length;
-        }
-        String[] columnParts = Arrays.copyOfRange(parts, startIndexInclusive, stopIndexExclusive);
-        columnParts = Arrays.stream(columnParts).map(s -> s.replaceAll(regexCleaner, "")).toArray(String[]::new);
-        return columnParts;
-    }
-
-    class Table {
-        private final String name;
-        private final String[] columns;
-        private final List<String[]> rows;
-
-        public Table(String name, String[] columns) {
-            this.name = name;
-            this.columns = columns;
-            this.rows = new ArrayList<>();
-        }
-
-        public Table(String name) {
-            this.name = name;
-            this.columns = null;
-            this.rows = new ArrayList<>();
-        }
-
-        public void addRow(String[] values) {
-            if (values.length != columns.length) {
-                throw new IllegalArgumentException("Invalid number of values");
-            }
-            rows.add(values);
-        }
-
-        public List<String[]> getRows() {
-            return rows;
-        }
-
-        public String[] getColumns() {
-            return columns;
-        }
-
-        public List<String[]> applyWhere(String condition) {
-            List<String[]> result = new ArrayList<>();
-            for (String[] row : rows) {
-                if (evaluateWhere(row, condition)) {
-                    result.add(row);
-                }
-            }
-            return result;
-        }
-
-        private boolean evaluateWhere(String[] row, String condition) {
-            String[] parts = condition.split(" ");
-            String column = parts[0];
-            String operator = parts[1];
-            String value = parts[2];
-
-            int columnIndex = getColumnIndex(column);
-            String cellValue = row[columnIndex];
-
-            return switch (operator) {
-                case "=" -> cellValue.equals(value);
-                case "<" -> Integer.parseInt(cellValue) < Integer.parseInt(value);
-                case ">" -> Integer.parseInt(cellValue) > Integer.parseInt(value);
-                default -> throw new IllegalArgumentException("Invalid operator: " + operator);
-            };
-        }
-
-        public void update(String column, String value, String condition) {
-            for (String[] row : rows) {
-                if (evaluateWhere(row, condition)) {
-                    int columnIndex = getColumnIndex(column.strip());
-                    row[columnIndex] = value.strip();
-                }
+    private boolean evaluateWhere(String[] row, String column, String value) throws IllegalArgumentException {
+        // Get index of column in row
+        int index = -1;
+        for (int i = 0; i < row.length; i++) {
+            if (column.equals(row[i])) {
+                index = i;
+                break;
             }
         }
-
-        public void delete(String condition) {
-            Iterator<String[]> iterator = rows.iterator();
-            while (iterator.hasNext()) {
-                String[] row = iterator.next();
-                if (evaluateWhere(row, condition)) {
-                    iterator.remove();
-                }
-            }
+        if (index == -1) {
+            throw new IllegalArgumentException("Column not found: " + column);
         }
 
-        private int getColumnIndex(String column) {
-            for (int i = 0; i < columns.length; i++) {
-                if (columns[i].equals(column)) {
-                    return i;
-                }
-            }
-            throw new IllegalArgumentException("Invalid column: " + column);
+        // Compare value at index to WHERE value
+        return value.equals(row[index]);
+    }
+
+    private boolean evaluateWhere(String[] row, String[] columns, String[] values) throws IllegalArgumentException {
+        if (columns.length != values.length) {
+            throw new IllegalArgumentException("Number of columns and values not matching");
         }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-
-            // Print column names
-            sb.append(String.join(", ", columns)).append("\n");
-
-            // Print rows
-            for (String[] row : rows) {
-                sb.append(String.join(", ", row)).append("\n");
+        for (int i = 0; i < columns.length; i++) {
+            if (!evaluateWhere(row, columns[i], values[i])) {
+                return false;
             }
-
-            return sb.toString();
         }
+        return true;
     }
 
 
+    private void loadFromFile(String folderName) throws Exception {
+        // Get list of CSV files in directory
+        File dir = new File("." + folderName + "\\");
+        File[] csvFiles = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".csv");
+            }
+        });
+        if (csvFiles != null) {
+            // Load tables from CSV files
+            for (File csvFile : csvFiles) {
+                Table table = Table.loadFromCSV(csvFile.getAbsolutePath());
+                tables.put(csvFile.getName().replace(".csv", ""), table);
+            }
+        }
+    }
 
+    private void onExecutionSaving(String tableName) {
+        try {
+            tables.get(tableName).saveToCSV(tableName + ".csv");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
