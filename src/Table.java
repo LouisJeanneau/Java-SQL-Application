@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class Table {
@@ -59,14 +58,34 @@ public class Table {
         }
     }
 
-    public void delete(String column, String value) {
-        Iterator<String[]> iterator = rows.iterator();
-        while (iterator.hasNext()) {
-            String[] row = iterator.next();
-            if (value.equals(row[getColumnIndex(column)])) {
-                iterator.remove();
+    public boolean deleteWhere(String column, String value) {
+        return rows.removeIf(row -> value.equals(row[getColumnIndex(column)]));
+    }
+
+    private boolean equalsRow(String[] row1, String[] row2){
+        if (row1.length != row2.length) {
+            return false;
+        }
+        for (int i = 0; i < row1.length; i++) {
+            if (!row1[i].equals(row2[i])){
+                return false;
             }
         }
+        return true;
+    }
+
+    public boolean deleteRow(String[] row){
+        return rows.removeIf(r -> equalsRow(r, row));
+    }
+
+    public boolean deleteRows(List<String[]> rowsToDelete){
+        boolean modifiedRows = false;
+        for (String[] strings : rowsToDelete) {
+            if (deleteRow(strings)){
+                modifiedRows = true;
+            }
+        }
+        return modifiedRows;
     }
 
     public void saveToCSV(String fileName) throws Exception {
@@ -89,7 +108,7 @@ public class Table {
     }
 
     public static Table loadFromCSV(String fileName) throws Exception {
-        Table table = null;
+        Table table;
 
         try (Reader reader = new FileReader(fileName)) {
             // Create CSV reader
@@ -117,7 +136,7 @@ public class Table {
                 return i;
             }
         }
-        return -1;
+        throw new IllegalArgumentException("Column name invalid in this table : " + column);
     }
 
     public int[] getColumnsIndex(String[] columns){

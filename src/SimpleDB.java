@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
@@ -10,8 +9,10 @@ public class SimpleDB {
     private static final String INSERT_REGEX = "INSERT INTO (\\w+) VALUES \\(([\\w ,']+)\\)";
     private static final String UPDATE_REGEX = "UPDATE (\\w+) SET (((\\w+) ?= ?'([\\w ]+)' *,* *)+).*";
     private static final String DELETE_REGEX = "DELETE FROM (\\w+)(.*)";
-    private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)";
+    private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)(.*)";
     private static final String WHERE_REGEX = "WHERE (((\\w+) = '(\\w+)' *(AND)* *)+)";
+
+    private static final String TRIM_REGEX = "^[ '\"]+|[ '\"]+$";
 
     Map<String, Table> tables;
 
@@ -22,7 +23,7 @@ public class SimpleDB {
     }
 
     /**
-     * @param sql
+     * @param sql the SQL query to execute
      */
     public void executeSQL(String sql) {
         System.out.println("You typed : " + sql);
@@ -102,7 +103,7 @@ public class SimpleDB {
         String[] values = m.group(2).split(",");
 
         // Trim leading/trailing whitespace from values
-        values = Arrays.stream(values).map(String::trim).toArray(String[]::new);
+        values = Arrays.stream(values).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new);
 
         // Insert row into table
         tables.get(tableName).insert(values);
@@ -117,14 +118,14 @@ public class SimpleDB {
      *
      * @param sql   sql query with the WHERE
      * @param table the table to extract lines from
-     * @return
+     * @return the line filtered from the table according to the conditions
      */
     private List<String[]> handleWhere(String sql, Table table) {
         // Extract conditions in a List of String[]
         String[] conditionsString = Pattern.compile(WHERE_REGEX).matcher(sql).results().map(ma -> ma.group(1)).findFirst().orElse("").split("AND");
         List<String[]> conditions = new ArrayList<>();
         for (String condition : conditionsString) {
-            conditions.add(Arrays.stream(condition.split("=")).map(c -> c.replaceAll("^[ ']+|[ ']+$", "")).toArray(String[]::new));
+            conditions.add(Arrays.stream(condition.split("=")).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new));
         }
 
         // Extract columns indexes
@@ -170,18 +171,43 @@ public class SimpleDB {
         onExecutionSaving(tableName);
     }
 
+    /**
+     * Delete element matching the WHERE condition. If no WHERE condition, delete everything
+     * @param sql valid DELETE FROM query
+     */
     private void handleDelete(String sql) {
         // Parse table name and WHERE clause from SQL
         Matcher m = Pattern.compile(DELETE_REGEX).matcher(sql);
         m.find();
         String tableName = m.group(1);
-        String whereColumn = m.group(2);
-        String whereValue = m.group(3);
+        String whereSQL = m.group(2);
 
-        // TODO : multiple WHERE cond
+        // Get table
+        Table table = tables.get(tableName);
+
+        List<String[]> selectedRows;
+        // Delete everything ?
+        if (whereSQL.equals("")){
+            System.out.println("You are about to delete the whole " + tableName + " table.");
+            if (!Main.userConfirmation()) {
+                throw new CancellationException("Canceled deletion of the whole table.");
+            }
+            selectedRows = table.getRows();
+
+        } // Select the line according to conditions
+        else {
+            selectedRows = handleWhere(whereSQL, table);
+        }
+
         // Delete rows from table
-        tables.get(tableName).delete(whereColumn, whereValue);
+        if (table.deleteRows(selectedRows)){
+            System.out.println(selectedRows.size() + " row(s) deleted");
+        }
+        else {
+            System.out.println("0 row deleted");
+        }
 
+        // Saving
         onExecutionSaving(tableName);
     }
 
@@ -209,8 +235,8 @@ public class SimpleDB {
 
 
         // Select rows from table
-        Table table = tables.get(tableName);
-        for (String[] row : table.getRows()) {
+        List<String[]> rows = tables.get(tableName).getRows();
+        for (String[] row : rows) {
             System.out.println(Arrays.toString(row));
         }
     }
@@ -248,11 +274,7 @@ public class SimpleDB {
     private void loadFromFile(String folderName) throws Exception {
         // Get list of CSV files in directory
         File dir = new File("." + folderName + "\\");
-        File[] csvFiles = dir.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".csv");
-            }
-        });
+        File[] csvFiles = dir.listFiles((dir1, name) -> name.endsWith(".csv"));
         if (csvFiles != null) {
             // Load tables from CSV files
             for (File csvFile : csvFiles) {

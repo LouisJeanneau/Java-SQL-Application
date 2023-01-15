@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="80734b3c-665d-4baf-b6ce-cea0d2dd79f6" name="Changes" comment="half working version">
-      <change afterPath="$PROJECT_DIR$/src/Table.java" afterDir="false" />
+    <list default="true" id="80734b3c-665d-4baf-b6ce-cea0d2dd79f6" name="Changes" comment="delete not working because of object[] equals method">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FileDatabase/FileDatabase/Database.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FileDatabase/FileDatabase/Database.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FileDatabase/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FileDatabase/Main.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/FileDatabase/Database.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileDatabase/Database.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SimpleDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleDB.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SimpleDBTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleDBTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Table.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Table.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,6 +32,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
   <component name="ProjectId" id="2K3RqBd5ziPbtlmyKueWqERlk52" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -46,13 +51,13 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last.edited.regexp": "UPDATE non SET nom='jean' WHERE oui='oui'",
+    "last.edited.regexp": "DELETE FROM table",
     "last_opened_file_path": "C:/Users/Louis/Google Drive/01_UTC/GI05_Erasmus/Java/FileDatabase/src",
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.2",
     "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "com.intellij.jarRepository.settings.RemoteRepositoriesConfigurable"
+    "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.postfix.templates"
   },
   "keyToStringList": {
     "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
@@ -125,7 +130,7 @@
       <workItem from="1673285611712" duration="3577000" />
       <workItem from="1673290933698" duration="20585000" />
       <workItem from="1673615964758" duration="10475000" />
-      <workItem from="1673802903229" duration="6358000" />
+      <workItem from="1673802903229" duration="14050000" />
     </task>
     <task id="LOCAL-00001" summary="half working version">
       <created>1673303266272</created>
@@ -134,7 +139,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673303266272</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="missing SELECT, UPDATE and DELETE optimized for WHERE">
+      <created>1673809917590</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1673809917590</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -153,7 +165,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="half working version" />
-    <option name="LAST_COMMIT_MESSAGE" value="half working version" />
+    <MESSAGE value="missing SELECT, UPDATE and DELETE optimized for WHERE" />
+    <MESSAGE value="delete not working because of object[] equals method" />
+    <option name="LAST_COMMIT_MESSAGE" value="delete not working because of object[] equals method" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -170,7 +184,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/Main.java</url>
-          <line>83</line>
+          <line>81</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>

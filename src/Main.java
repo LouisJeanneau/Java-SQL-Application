@@ -1,20 +1,19 @@
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Scanner;
 
 public class Main {
     static Scanner scanner = new Scanner(System.in);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         // Welcome message
         System.out.println("Welcome to SimpleDB ! A simple file-based database application developed in Java.");
 
         // Valid key inputs selection and user selection menu #1
         char[] correctKeys = {100, 68, 32};
         char pressedKey = 0;
-        String line = "";
+        String line;
         while (!ArrayUtils.contains(correctKeys, pressedKey)) {
             System.out.println("""
                     Type an option (and then 'Enter' key) :
@@ -62,7 +61,6 @@ public class Main {
     }
 
     private static void cli() throws Exception {
-        // TODO : cli loop
         System.out.println("Command-line Interface mode. Type 'exit' to exit.");
 
         SimpleDB db = new SimpleDB("");
