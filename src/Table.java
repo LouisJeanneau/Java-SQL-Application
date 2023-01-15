@@ -32,30 +32,17 @@ public class Table {
         rows.add(values);
     }
 
-    public void update(String column, String value, String columnWhere, String valueWhere) {
+    public boolean update(List<String[]> rowsToUpdate, String[] columnsToUpdate, String[] valuesNew){
+        boolean updated = false;
         for (String[] row : rows) {
-            if (valueWhere.equals(row[getColumnIndex(columnWhere)])) {
-                row[getColumnIndex(column)] = value;
+            if (rowsToUpdate.stream().anyMatch(c -> equalsRow(row, c))){
+                for (int i = 0; i < columnsToUpdate.length; i++) {
+                    row[getColumnIndex(columnsToUpdate[i])] = valuesNew[i];
+                }
+                updated = true;
             }
         }
-    }
-
-    public void update(String[] columns, String[] values, String[] columnWhere, String[] valueWhere) {
-        for (String[] row : rows) {
-            boolean doUpdate = true;
-            for (int i = 0; i < columnWhere.length; i++) {
-                if (!valueWhere[i].equals(row[getColumnIndex(columnWhere[i])])) {
-                    doUpdate = false;
-                }
-            }
-            if (doUpdate) {
-                for (int i = 0; i < columns.length; i++) {
-                    row[getColumnIndex(columns[i])] = values[i];
-                }
-
-            }
-
-        }
+        return updated;
     }
 
     public boolean deleteWhere(String column, String value) {

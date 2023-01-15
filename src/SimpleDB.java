@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class SimpleDB {
     private static final String CREATE_TABLE_REGEX = "CREATE TABLE (\\w+) \\(([\\w, ]+)\\)";
@@ -151,6 +152,10 @@ public class SimpleDB {
         return filteredRows;
     }
 
+    /**
+     * Update the table
+     * @param sql a valid UPDATE query
+     */
     private void handleUpdate(String sql) {
         // Parse table name, column name, value, and WHERE clause from SQL
         Matcher m = Pattern.compile(UPDATE_REGEX).matcher(sql);
@@ -160,13 +165,15 @@ public class SimpleDB {
         String[] updateColumns = Arrays.stream(updates).map(c -> c.split("=")[0].trim()).toArray(String[]::new);
         String[] updateValues = Arrays.stream(updates).map(c -> c.split("=")[1].trim().replace("'", "")).toArray(String[]::new);
 
-        // TODO : extract WHERE reading
-        String[] conditions = Pattern.compile(WHERE_REGEX).matcher(sql).results().map(ma -> ma.group(1)).findFirst().orElse("").split("AND");
-        String[] whereColumns = Arrays.stream(conditions).map(c -> c.split("=")[0].trim()).toArray(String[]::new);
-        String[] whereValues = Arrays.stream(conditions).map(c -> c.split("=")[1].trim().replace("'", "")).toArray(String[]::new);
-
+        Table table = tables.get(tableName);
+        List<String[]> rows = handleWhere(sql, table);
         // Update rows in table
-        tables.get(tableName).update(updateColumns, updateValues, whereColumns, whereValues);
+         if (table.update(rows, updateColumns, updateValues)){
+             System.out.println(rows.size() + " row(s) updated");
+         }
+         else {
+             System.out.println("0 row updated");
+         }
 
         onExecutionSaving(tableName);
     }
@@ -211,36 +218,57 @@ public class SimpleDB {
         onExecutionSaving(tableName);
     }
 
+    /**
+     * Print the result of your query
+     * @param sql a SELECT query
+     */
     private void handleSelect(String sql) {
         // Parse table name and WHERE clause from SQL
         Matcher m = Pattern.compile(SELECT_REGEX).matcher(sql);
         m.find();
         String tableName = m.group(2);
-        String columns = m.group(1);
+        String columnsString = m.group(1);
+        String whereSQL = m.group(3);
 
-        // TODO : multiple WHERE cond
-        if (sql.contains("WHERE")) {
-            Matcher mbis = Pattern.compile(WHERE_REGEX).matcher(sql);
-            mbis.find();
-            String whereColumn = m.group(2);
-            String whereValue = m.group(3);
-            // Select rows from table
-            Table table = tables.get(tableName);
-            for (String[] row : table.getRows()) {
-                if (evaluateWhere(row, whereColumn, whereValue)) {
-                    System.out.println(Arrays.toString(row));
-                }
-            }
+        // Get table
+        Table table = tables.get(tableName);
+
+        // Select rows if WHERE condition
+        List<String[]> rows;
+        if (!whereSQL.equals("")) {
+            rows = handleWhere(whereSQL, table);
+        }
+        else {
+            rows = tables.get(tableName).getRows();
         }
 
+        // Extract columns indexes if not *
+        int[] columnsIndex;
+        if (columnsString.equals("*")){
+            columnsIndex = IntStream.range(0, table.getColumns().length).toArray();
+        }
+        else {
+            String[] columns = Arrays.stream(columnsString.split(",")).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new);
+            columnsIndex = table.getColumnsIndex(columns);
+        }
 
-        // Select rows from table
-        List<String[]> rows = tables.get(tableName).getRows();
+        // Print the table
+        // Columns
+        String[] col = table.getColumns();
+        for (int index : columnsIndex) {
+            System.out.printf(col[index] + ", ");
+        }
+        System.out.print("\b\b  \n");
+        // Rows
         for (String[] row : rows) {
-            System.out.println(Arrays.toString(row));
+            for (int index : columnsIndex) {
+                System.out.printf(row[index] + ", ");
+            }
+            System.out.print("\b\b  \n");
         }
     }
 
+    /*
     private boolean evaluateWhere(String[] row, String column, String value) throws IllegalArgumentException {
         // Get index of column in row
         int index = -1;
@@ -269,7 +297,7 @@ public class SimpleDB {
         }
         return true;
     }
-
+    */
 
     private void loadFromFile(String folderName) throws Exception {
         // Get list of CSV files in directory

@@ -52,11 +52,12 @@ public class Main {
         System.out.println("Launching the demo !\n");
         SimpleDB db = new SimpleDB("");
         db.executeSQL("CREATE TABLE stud (name, surname, age)");
-        db.executeSQL("CREATE TABLE teacher (name, surname, age)");
         db.executeSQL("INSERT INTO stud VALUES (Pierre, Papin, 58)");
-        db.executeSQL("INSERT INTO teacher VALUES (Yo, wtf, 50)");
         db.executeSQL("SELECT * FROM stud");
         db.executeSQL("UPDATE stud SET name = 'Jean', surname = 'Michel' WHERE name = 'Pierre'");
+
+        db.executeSQL("CREATE TABLE teacher (name, surname, age)");
+        db.executeSQL("INSERT INTO teacher VALUES (Yo, wtf, 50)");
         db.executeSQL("SELECT * FROM teacher");
     }
 

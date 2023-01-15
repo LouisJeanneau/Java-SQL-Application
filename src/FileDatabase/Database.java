@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class Database {
-    private String fileName;
-    private int numberOfColumns;
+    private final String fileName;
+    private final int numberOfColumns;
 
     public Database(String fileName, String[] columnsName) throws IOException, IllegalArgumentException {
         File file = new File(fileName);
