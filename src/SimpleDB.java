@@ -11,8 +11,9 @@ public class SimpleDB {
     private static final String UPDATE_REGEX = "UPDATE (\\w+) SET (((\\w+) ?= ?'([\\w ]+)' *,* *)+).*";
     private static final String DELETE_REGEX = "DELETE FROM (\\w+)(.*)";
     private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)(.*)";
-    private static final String WHERE_REGEX = "WHERE (((\\w+) = '(\\w+)' *(AND)* *)+)";
+    private static final String WHERE_REGEX = "WHERE (((\\w+)*= *'(\\w+)' *(AND)* *)+)";
 
+    private static final String GROUP_REGEX = "GROUP BY ((\\w+) *,* *)+";
     private static final String TRIM_REGEX = "^[ '\"]+|[ '\"]+$";
 
     Map<String, Table> tables;
@@ -235,11 +236,18 @@ public class SimpleDB {
 
         // Select rows if WHERE condition
         List<String[]> rows;
-        if (!whereSQL.equals("")) {
+        m = Pattern.compile(WHERE_REGEX).matcher(sql);
+        if (m.find()) {
             rows = handleWhere(whereSQL, table);
         }
         else {
             rows = tables.get(tableName).getRows();
+        }
+
+        // GROUP BY
+        m = Pattern.compile(GROUP_REGEX).matcher(sql);
+        if (m.find()){
+            rows = handleGroupBy(m.group(1), rows, table);
         }
 
         // Extract columns indexes if not *
@@ -268,36 +276,32 @@ public class SimpleDB {
         }
     }
 
-    /*
-    private boolean evaluateWhere(String[] row, String column, String value) throws IllegalArgumentException {
-        // Get index of column in row
-        int index = -1;
-        for (int i = 0; i < row.length; i++) {
-            if (column.equals(row[i])) {
-                index = i;
-                break;
+    private List<String[]> handleGroupBy(String columnsString, List<String[]> rows, Table table){
+        List<String[]> resultRows = new ArrayList<>();
+               
+        // Extract columns indexes
+        String[] columns = Arrays.stream(columnsString.split(",")).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new);
+        int[] columnsIndex = table.getColumnsIndex(columns);
+
+        // TODO : multiple columns
+        List<String> encountered = new ArrayList<>();
+        boolean doCopy;
+        for (String[] row : rows) {
+            doCopy = true;
+            for (int index : columnsIndex) {
+                if (encountered.contains(row[index])) {
+                    doCopy = false;
+                    break;
+                }
+                encountered.add(row[index]);
+            }
+            if (doCopy){
+                resultRows.add(row);
             }
         }
-        if (index == -1) {
-            throw new IllegalArgumentException("Column not found: " + column);
-        }
-
-        // Compare value at index to WHERE value
-        return value.equals(row[index]);
+        
+        return  resultRows;
     }
-
-    private boolean evaluateWhere(String[] row, String[] columns, String[] values) throws IllegalArgumentException {
-        if (columns.length != values.length) {
-            throw new IllegalArgumentException("Number of columns and values not matching");
-        }
-        for (int i = 0; i < columns.length; i++) {
-            if (!evaluateWhere(row, columns[i], values[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-    */
 
     private void loadFromFile(String folderName) throws Exception {
         // Get list of CSV files in directory
