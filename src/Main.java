@@ -1,5 +1,6 @@
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -59,15 +60,24 @@ public class Main {
                 CREATE TABLE stud (name, surname, age, country)
                 INSERT INTO stud VALUES (Louis, Jeanneau, 22, France)
                 INSERT INTO stud VALUES (Alexis, Moreau, 22, France), (Antoine, Lucien, 23, France)
+                INSERT INTO stud VALUES (not, enough, values)
+                INSERT INTO stud VALUES (Alexis, Perrier, 21, France), (Alexis, Gravier, 22, France), (Alxse, typo, 20, France), (Fernando, Alonso, 44, Spain), (Michael, Schumacher, 45, Germany)
+                SELECT * FROM stud
+                UPDATE stud SET name = 'Alexis', surname = 'Dupont' WHERE surname = 'typo'
+                SELECT * FROM stud WHERE name = 'Alexis'
+                SELECT surname, age FROM stud WHERE name = 'Alexis'
+                UPDATE stud SET name = 'Pierre' WHERE name = 'Alexis'
+                SELECT name, surname, age FROM stud GROUP BY name
+                DELETE FROM stud WHERE country = Spain
+                DELETE FROM stud WHERE age = 44
+                SELECT * FROM stud
+                
+                CREATE TABLE pilot (name, surname, age)
+                INSERT INTO pilot VALUES (Fernando, Alonso, 44), (Lewis, Hamilton, 41)
+                SELECT * FROM pilot
                 """;
-        db.executeSQL("CREATE TABLE stud (name, surname, age)");
-        db.executeSQL("INSERT INTO stud VALUES (Pierre, Papin, 58)");
-        db.executeSQL("SELECT * FROM stud");
-        db.executeSQL("UPDATE stud SET name = 'Jean', surname = 'Michel' WHERE name = 'Pierre'");
 
-        db.executeSQL("CREATE TABLE teacher (name, surname, age)");
-        db.executeSQL("INSERT INTO teacher VALUES (Yo, wtf, 50)");
-        db.executeSQL("SELECT * FROM teacher");
+        Arrays.stream(demo.split("\\r?\\n")).forEach(db::executeSQL);
     }
 
     private static void cli() throws Exception {
@@ -87,7 +97,7 @@ public class Main {
                         \tDELETE FROM name WHERE condition
                         \tSELECT * FROM name WHERE condition GROUP BY column1
                         \t\tWHERE clause, GROUP BY clause are optionals
-                        \t\tYou can specify columns desired by replacing '*'                        
+                        \t\tYou can specify columns desired by replacing '*'
                         """);
                 case "exit" -> {
                     System.out.println("Exiting...");

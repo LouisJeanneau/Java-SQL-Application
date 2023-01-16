@@ -11,9 +11,9 @@ public class SimpleDB {
     private static final String UPDATE_REGEX = "UPDATE (\\w+) SET (((\\w+) ?= ?'([\\w ]+)' *,* *)+).*";
     private static final String DELETE_REGEX = "DELETE FROM (\\w+)(.*)";
     private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)(.*)";
-    private static final String WHERE_REGEX = "WHERE (((\\w+)*= *'(\\w+)' *(AND)* *)+)";
-
+    private static final String WHERE_REGEX = "WHERE (((\\w+) *= *'(\\w+)' *(AND)* *)+).*";
     private static final String GROUP_REGEX = "GROUP BY (((\\w+) *,* *)+)";
+    private static final String JOIN_REGEX = "JOIN ([\\w, ]+|\\*).*";
     private static final String TRIM_REGEX = "^[( '\"]+|[) '\"]+$";
 
     Map<String, Table> tables;
@@ -287,7 +287,7 @@ public class SimpleDB {
         String[] columns = Arrays.stream(columnsString.split(",")).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new);
         int[] columnsIndex = table.getColumnsIndex(columns);
 
-        // TODO : multiple columns
+        // Loop over each row to determine if it's a 'repeated' one or a new one
         List<String[]> encountered = new ArrayList<>();
         for (String[] row : rows) {
             List<String> rowSelectedColumn = new ArrayList<>();
