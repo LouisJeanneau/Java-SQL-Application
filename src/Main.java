@@ -51,6 +51,15 @@ public class Main {
     private static void demoQueries() throws Exception {
         System.out.println("Launching the demo !\n");
         SimpleDB db = new SimpleDB("");
+        // TODO more demo
+        String demo = """
+                help
+                SELECT * FROM notable
+                CREATE TABLE stud (name, surname, age)
+                CREATE TABLE stud (name, surname, age, country)
+                INSERT INTO stud VALUES (Louis, Jeanneau, 22, France)
+                INSERT INTO stud VALUES (Alexis, Moreau, 22, France), (Antoine, Lucien, 23, France)
+                """;
         db.executeSQL("CREATE TABLE stud (name, surname, age)");
         db.executeSQL("INSERT INTO stud VALUES (Pierre, Papin, 58)");
         db.executeSQL("SELECT * FROM stud");
@@ -70,6 +79,16 @@ public class Main {
         while (true){
             switch (enteredLine = scanner.nextLine()) {
                 case "" -> System.out.println("Empty query");
+                case "help" -> System.out.println("""
+                        You have access to the following commands :
+                        \tCREATE TABLE name (column1, column2, ...)
+                        \tINSERT INTO name VALUES (value1, value2, ...),  ...
+                        \tUPDATE name SET column = 'newValue' WHERE condition
+                        \tDELETE FROM name WHERE condition
+                        \tSELECT * FROM name WHERE condition GROUP BY column1
+                        \t\tWHERE clause, GROUP BY clause are optionals
+                        \t\tYou can specify columns desired by replacing '*'                        
+                        """);
                 case "exit" -> {
                     System.out.println("Exiting...");
                     return;

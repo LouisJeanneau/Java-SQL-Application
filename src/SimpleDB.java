@@ -7,14 +7,14 @@ import java.util.stream.IntStream;
 
 public class SimpleDB {
     private static final String CREATE_TABLE_REGEX = "CREATE TABLE (\\w+) \\(([\\w, ]+)\\)";
-    private static final String INSERT_REGEX = "INSERT INTO (\\w+) VALUES \\(([\\w ,']+)\\)";
+    private static final String INSERT_REGEX = "INSERT INTO (\\w+) VALUES ((\\(([\\w ,']+)\\),* *)+)";
     private static final String UPDATE_REGEX = "UPDATE (\\w+) SET (((\\w+) ?= ?'([\\w ]+)' *,* *)+).*";
     private static final String DELETE_REGEX = "DELETE FROM (\\w+)(.*)";
     private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)(.*)";
     private static final String WHERE_REGEX = "WHERE (((\\w+)*= *'(\\w+)' *(AND)* *)+)";
 
     private static final String GROUP_REGEX = "GROUP BY (((\\w+) *,* *)+)";
-    private static final String TRIM_REGEX = "^[ '\"]+|[ '\"]+$";
+    private static final String TRIM_REGEX = "^[( '\"]+|[) '\"]+$";
 
     Map<String, Table> tables;
 
@@ -102,13 +102,17 @@ public class SimpleDB {
         Matcher m = Pattern.compile(INSERT_REGEX).matcher(sql);
         m.find();
         String tableName = m.group(1);
-        String[] values = m.group(2).split(",");
+        String[] values = m.group(2).split("\\), *\\(");
+        String[] row;
 
-        // Trim leading/trailing whitespace from values
-        values = Arrays.stream(values).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new);
+        for (String value : values) {
+            // Trim leading/trailing whitespace from values
+            row = Arrays.stream(value.split(",")).map(c -> c.replaceAll(TRIM_REGEX, "")).toArray(String[]::new);
 
-        // Insert row into table
-        tables.get(tableName).insert(values);
+            // Insert row into table
+            tables.get(tableName).insert(row);
+        }
+
 
         // Saving to files
         onExecutionSaving(tableName);
