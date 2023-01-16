@@ -13,7 +13,7 @@ public class SimpleDB {
     private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)(.*)";
     private static final String WHERE_REGEX = "WHERE (((\\w+)*= *'(\\w+)' *(AND)* *)+)";
 
-    private static final String GROUP_REGEX = "GROUP BY ((\\w+) *,* *)+";
+    private static final String GROUP_REGEX = "GROUP BY (((\\w+) *,* *)+)";
     private static final String TRIM_REGEX = "^[ '\"]+|[ '\"]+$";
 
     Map<String, Table> tables;
@@ -284,19 +284,16 @@ public class SimpleDB {
         int[] columnsIndex = table.getColumnsIndex(columns);
 
         // TODO : multiple columns
-        List<String> encountered = new ArrayList<>();
-        boolean doCopy;
+        List<String[]> encountered = new ArrayList<>();
         for (String[] row : rows) {
-            doCopy = true;
+            List<String> rowSelectedColumn = new ArrayList<>();
             for (int index : columnsIndex) {
-                if (encountered.contains(row[index])) {
-                    doCopy = false;
-                    break;
-                }
-                encountered.add(row[index]);
+                rowSelectedColumn.add(row[index]);
             }
-            if (doCopy){
-                resultRows.add(row);
+            String[] rowSelectedColumnArray = rowSelectedColumn.toArray(String[]::new);
+            if (encountered.stream().noneMatch(c -> Table.equalsRow(c, rowSelectedColumnArray))){
+                resultRows.add(row.clone());
+                encountered.add(rowSelectedColumnArray);
             }
         }
         

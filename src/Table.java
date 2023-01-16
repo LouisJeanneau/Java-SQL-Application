@@ -49,7 +49,7 @@ public class Table {
         return rows.removeIf(row -> value.equals(row[getColumnIndex(column)]));
     }
 
-    private boolean equalsRow(String[] row1, String[] row2){
+    public static boolean equalsRow(String[] row1, String[] row2){
         if (row1.length != row2.length) {
             return false;
         }
