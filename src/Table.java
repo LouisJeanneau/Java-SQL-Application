@@ -25,11 +25,12 @@ public class Table {
         return rows;
     }
 
-    public void insert(String[] values) {
+    public boolean insert(String[] values) {
         if (values.length != columns.length) {
             throw new IllegalArgumentException("Invalid number of values");
         }
         rows.add(values);
+        return true;
     }
 
     public boolean update(List<String[]> rowsToUpdate, String[] columnsToUpdate, String[] valuesNew){
@@ -71,7 +72,7 @@ public class Table {
         return modifiedRows;
     }
 
-    public void saveToCSV(String fileName) throws Exception {
+    public boolean saveToCSV(String fileName) throws Exception {
         try (Writer writer = new FileWriter(fileName)) {
             // Create CSV writer
             CSVWriter csvWriter = new CSVWriter(writer,
@@ -88,6 +89,7 @@ public class Table {
             }
             csvWriter.close();
         }
+        return true;
     }
 
     public static Table loadFromCSV(String fileName) throws Exception {
