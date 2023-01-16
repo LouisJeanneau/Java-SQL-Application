@@ -68,8 +68,8 @@ public class Main {
                 SELECT surname, age FROM stud WHERE name = 'Alexis'
                 UPDATE stud SET name = 'Pierre' WHERE name = 'Alexis'
                 SELECT name, surname, age FROM stud GROUP BY name
-                DELETE FROM stud WHERE country = Spain
-                DELETE FROM stud WHERE age = 44
+                DELETE FROM stud WHERE country = 'Spain'
+                DELETE FROM stud WHERE age = '44'
                 SELECT * FROM stud
                 
                 CREATE TABLE pilot (name, surname, age)
@@ -111,6 +111,6 @@ public class Main {
     public static boolean userConfirmation(){
         System.out.println("Type 'y' to confirm. Anything else to cancel.");
         char pressedKey = scanner.nextLine().charAt(0);
-        return pressedKey == 'y';
+        return pressedKey != 'y';
     }
 }

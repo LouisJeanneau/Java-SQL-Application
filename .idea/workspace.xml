@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="80734b3c-665d-4baf-b6ce-cea0d2dd79f6" name="Changes" comment="delete not working because of object[] equals method">
+    <list default="true" id="80734b3c-665d-4baf-b6ce-cea0d2dd79f6" name="Changes" comment="JOIN implemented. Fixed a lot.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FileDatabase/FileDatabase/Database.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FileDatabase/FileDatabase/Database.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FileDatabase/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FileDatabase/Main.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FileDatabase/Database.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileDatabase/Database.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SimpleDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleDB.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SimpleDBTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SimpleDBTest.java" afterDir="false" />
@@ -51,7 +48,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last.edited.regexp": "DELETE FROM table",
+    "last.edited.regexp": "SELECT name, surname, age FROM stud WHERE name = 'Alexis'",
     "last_opened_file_path": "C:/Users/Louis/Google Drive/01_UTC/GI05_Erasmus/Java/FileDatabase/src",
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.0",
@@ -70,7 +67,7 @@
       <recent name="C:\Users\Louis\Google Drive\01_UTC\GI05_Erasmus\Java\FileDatabase\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Main">
+  <component name="RunManager" selected="JUnit.SimpleDBTest.testCreateTable">
     <configuration name="ChatGPT" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="SimpleDB" />
       <module name="FileDatabase" />
@@ -94,6 +91,16 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="SimpleDBTest.testCreateTable" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="FileDatabase" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="SimpleDBTest" />
+      <option name="METHOD_NAME" value="testCreateTable" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="SimpleDBTest.testUpdate" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="FileDatabase" />
       <option name="PACKAGE_NAME" value="" />
@@ -107,11 +114,13 @@
     <list>
       <item itemvalue="Application.ChatGPT" />
       <item itemvalue="Application.Main" />
+      <item itemvalue="JUnit.SimpleDBTest.testCreateTable" />
       <item itemvalue="JUnit.SimpleDBTest" />
       <item itemvalue="JUnit.SimpleDBTest.testUpdate" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.SimpleDBTest.testCreateTable" />
         <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.SimpleDBTest.testUpdate" />
         <item itemvalue="JUnit.SimpleDBTest" />
@@ -130,7 +139,8 @@
       <workItem from="1673285611712" duration="3577000" />
       <workItem from="1673290933698" duration="20585000" />
       <workItem from="1673615964758" duration="10475000" />
-      <workItem from="1673802903229" duration="14050000" />
+      <workItem from="1673802903229" duration="24529000" />
+      <workItem from="1673887604740" duration="11539000" />
     </task>
     <task id="LOCAL-00001" summary="half working version">
       <created>1673303266272</created>
@@ -146,7 +156,49 @@
       <option name="project" value="LOCAL" />
       <updated>1673809917590</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Delete working (i guess)">
+      <created>1673817603313</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1673817603313</updated>
+    </task>
+    <task id="LOCAL-00004" summary="UPDATE  working">
+      <created>1673822442830</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1673822442830</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Group By working on single column">
+      <created>1673835942412</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1673835942412</updated>
+    </task>
+    <task id="LOCAL-00006" summary="GROUP BY multiple columns">
+      <created>1673889300802</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1673889300802</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Multiple VALUES in single INSERT">
+      <created>1673891343155</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1673891343155</updated>
+    </task>
+    <task id="LOCAL-00008" summary="WHERE_REGEX fixed">
+      <created>1673893160105</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1673893160105</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -167,7 +219,15 @@
     <MESSAGE value="half working version" />
     <MESSAGE value="missing SELECT, UPDATE and DELETE optimized for WHERE" />
     <MESSAGE value="delete not working because of object[] equals method" />
-    <option name="LAST_COMMIT_MESSAGE" value="delete not working because of object[] equals method" />
+    <MESSAGE value="Delete working (i guess)" />
+    <MESSAGE value="Select is OP" />
+    <MESSAGE value="UPDATE  working" />
+    <MESSAGE value="Group By working on single column" />
+    <MESSAGE value="GROUP BY multiple columns" />
+    <MESSAGE value="Multiple VALUES in single INSERT" />
+    <MESSAGE value="WHERE_REGEX fixed" />
+    <MESSAGE value="JOIN implemented. Fixed a lot." />
+    <option name="LAST_COMMIT_MESSAGE" value="JOIN implemented. Fixed a lot." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -183,9 +243,9 @@
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Main.java</url>
-          <line>81</line>
-          <option name="timeStamp" value="13" />
+          <url>file://$PROJECT_DIR$/src/SimpleDB.java</url>
+          <line>231</line>
+          <option name="timeStamp" value="26" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

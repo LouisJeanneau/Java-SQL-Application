@@ -10,7 +10,7 @@ public class SimpleDB {
     private static final String INSERT_REGEX = "INSERT INTO (\\w+) VALUES ((\\(([\\w ,']+)\\),* *)+)";
     private static final String UPDATE_REGEX = "UPDATE (\\w+) SET (((\\w+) ?= ?'([\\w ]+)' *,* *)+).*";
     private static final String DELETE_REGEX = "DELETE FROM (\\w+)(.*)";
-    private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM (\\w+)(.*)";
+    private static final String SELECT_REGEX = "SELECT ([\\w, ]+|\\*) FROM ((?:\\w+[^WHER|GOUP BY],* *)+)(.*)";
     private static final String WHERE_REGEX = "WHERE (((\\w+) *= *'(\\w+)' *(AND)* *)+).*";
     private static final String GROUP_REGEX = "GROUP BY (((\\w+) *,* *)+)";
     private static final String JOIN_REGEX = "JOIN ([\\w, ]+|\\*).*";
@@ -78,7 +78,7 @@ public class SimpleDB {
         // Override check and validation by user
         if (tables.containsKey(tableName)) {
             System.out.println("This table already exists. This command will overwrite the existing table. Do you agree ?");
-            if (!Main.userConfirmation()) {
+            if (Main.userConfirmation()) {
                 throw new CancellationException("Creation of table canceled by user");
             }
         }
@@ -201,7 +201,7 @@ public class SimpleDB {
         // Delete everything ?
         if (whereSQL.equals("")){
             System.out.println("You are about to delete the whole " + tableName + " table.");
-            if (!Main.userConfirmation()) {
+            if (Main.userConfirmation()) {
                 throw new CancellationException("Canceled deletion of the whole table.");
             }
             selectedRows = table.getRows();
@@ -236,7 +236,13 @@ public class SimpleDB {
         String whereSQL = m.group(3);
 
         // Get table
-        Table table = tables.get(tableName);
+        Table table;
+        if (tableName.split(",").length > 1){
+            // CROSS JOIN
+            table = handleCrossJoin(tableName);
+        } else {
+            table = tables.get(tableName.replaceAll(TRIM_REGEX, ""));
+        }
 
         // Select rows if WHERE condition
         List<String[]> rows;
@@ -245,7 +251,7 @@ public class SimpleDB {
             rows = handleWhere(whereSQL, table);
         }
         else {
-            rows = tables.get(tableName).getRows();
+            rows = table.getRows();
         }
 
         // GROUP BY
@@ -302,6 +308,35 @@ public class SimpleDB {
         }
         
         return  resultRows;
+    }
+
+    private Table handleCrossJoin(String namesString){
+        List<String> columns = new ArrayList<>();
+        List<String> tablesName = Arrays.stream(namesString.split(",")).map(c -> c.replaceAll(TRIM_REGEX, "")).toList();
+        for (String t : tablesName) {
+            columns.addAll(List.of(tables.get(t).getColumns()));
+        }
+
+        Table joinedTable = new Table(columns.toArray(new String[0]));
+        List<String[]> products = tables.get(tablesName.get(0)).getRows();
+        ArrayList<String[]> newProducts = new ArrayList<>();
+        for (int i = 1; i < tablesName.size(); i++) {
+            for (String[] oldRow : products) {
+                for (String[] row : tables.get(tablesName.get(i)).getRows()) {
+                    String[] concatenatedArray = Arrays.copyOf(oldRow, oldRow.length + row.length);
+                    System.arraycopy(row, 0, concatenatedArray, oldRow.length, row.length);
+                    newProducts.add(concatenatedArray);
+                }
+            }
+            products = (List<String[]>) newProducts.clone();
+            newProducts.clear();
+        }
+
+        for (String[] row : products) {
+            joinedTable.insert(row);
+        }
+
+        return joinedTable;
     }
 
     private void loadFromFile(String folderName) throws Exception {
